@@ -1,29 +1,30 @@
 pipeline {
-    agent any
-
     environment {
-        DOCKER_IMAGE = 'your-dockerhub-username/prt-website:latest'
+        DOCKERHUB_CREDENTIALS = credentials("dockerhub")
+    }
+
+    agent {
+        label 'K-M'
+    }
+
+    triggers {
+        githubPush() // Automatically trigger build on GitHub push
     }
 
     stages {
-        stage('Clone Repository') {
+        stage('Clone GitHub Repo') {
             steps {
-                git 'https://github.com/your-github-username/Website-PRT-ORG.git'
+                git url: 'https://github.com/firdosneha/Website-PRT-ORG', branch: 'main'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Docker Build & Push') {
             steps {
-                sh 'docker build -t $DOCKER_IMAGE .'
-            }
-        }
-
-        stage('Push to DockerHub') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                    sh 'docker push $DOCKER_IMAGE'
-                }
+                sh '''
+                echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
+                docker build -t firdosneha/prt-task .
+                docker push firdosneha/prt-task
+                '''
             }
         }
 
@@ -33,9 +34,5 @@ pipeline {
                 sh 'kubectl apply -f k8s-service.yml'
             }
         }
-    }
-
-    triggers {
-        githubPush()
     }
 }
