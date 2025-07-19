@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prt-deployment
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: prt-app
+  template:
+    metadata:
+      labels:
+        app: prt-app
+    spec:
+      containers:
+      - name: prt-container
+        image: <your-dockerhub-username>/prt-website:latest
+        ports:
+        - containerPort: 80
